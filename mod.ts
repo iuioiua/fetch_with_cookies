@@ -1,13 +1,15 @@
 import { type Cookie } from "./deps.ts";
 
-export function getSetCookie(value: string): Cookie {
-  const array = value.split("; ")
-    .map((part) => part.split("="));
+const SET_COOKIE_SEP = /(?<!Expires=(Mon|Tue|Wed|Thu|Fri|Sat|Sun)), /g;
+
+function getSetCookie(value: string): Cookie {
+  const attrs = value.split("; ")
+    .map((attr) => attr.split("="));
   const cookie: Cookie = {
-    name: array[0][0],
-    value: array[0][1],
+    name: attrs[0][0],
+    value: attrs[0][1],
   };
-  for (const [key, value] of array.slice(1)) {
+  for (const [key, value] of attrs.slice(1)) {
     switch (key) {
       case "Expires":
         cookie.expires = new Date(value);
@@ -28,7 +30,7 @@ export function getSetCookie(value: string): Cookie {
         cookie.httpOnly = true;
         break;
       case "SameSite":
-        cookie.sameSite = value as "Strict" | "Lax" | "None";
+        cookie.sameSite = value as Cookie["sameSite"];
         break;
       default:
         if (!Array.isArray(cookie.unparsed)) {
@@ -38,4 +40,11 @@ export function getSetCookie(value: string): Cookie {
     }
   }
   return cookie;
+}
+
+export function getSetCookies(headers: Headers): Cookie[] {
+  return headers.get("Set-Cookie")!
+    .split(SET_COOKIE_SEP)
+    .filter(Boolean)
+    .map(getSetCookie) ?? [];
 }
