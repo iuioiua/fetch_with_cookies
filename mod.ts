@@ -1,8 +1,5 @@
 import { type Cookie } from "./deps.ts";
 
-/** Only matches a comma if not within the `Expires` attribute. */
-const SET_COOKIE_SEP = /(?<!Expires=(Mon|Tue|Wed|Thu|Fri|Sat|Sun)), /g;
-
 /**
  * Returns a parsed cookie object from the `Set-Cookie` header value.
  *
@@ -48,10 +45,14 @@ function getSetCookie(value: string): Cookie {
   return cookie;
 }
 
+function getSetCookieValues(headers: Headers): string[] {
+  return [...headers.entries()]
+    .filter(([key]) => key === "set-cookie")
+    .map(([_, value]) => value);
+}
+
 /** Returns cookie objects from `Set-Cookie` headers. */
 export function getSetCookies(headers: Headers): Cookie[] {
-  return headers.get("Set-Cookie")!
-    .split(SET_COOKIE_SEP)
-    .filter(Boolean)
+  return getSetCookieValues(headers)
     .map(getSetCookie) ?? [];
 }
