@@ -1,38 +1,49 @@
 import { type Cookie } from "./deps.ts";
 
-/**
- * Returns a parsed cookie object from the `Set-Cookie` header value.
- *
- * @todo Parse prefixed `__Secure-*` and `__Host-*` cookies.
- */
-function getSetCookie(value: string): Cookie {
-  const attrs = value.split("; ")
-    .map((attr) => attr.split("="));
+export function getSetCookieValues(headers: Headers): string[] {
+  return [...headers.entries()]
+    .filter(([key]) => key === "set-cookie")
+    .map(([_, value]) => value);
+}
+
+/** @link https://httpwg.org/specs/rfc6265.html#set-cookie */
+export function decomposeSetCookie(header: string): string[][] {
+  return header
+    .split(";")
+    .map((attr) =>
+      attr
+        .trim()
+        .split("=")
+        .map((keyOrValue) => keyOrValue.trim())
+    );
+}
+
+export function parseSetCookie(attrs: string[][]): Cookie {
   const cookie: Cookie = {
     name: attrs[0][0],
-    value: attrs[0][1],
+    value: attrs[1][1],
   };
-  for (const [key, value] of attrs.slice(1)) {
-    switch (key) {
-      case "Expires":
+  for (const [key, value] of attrs) {
+    switch (key.toLocaleLowerCase()) {
+      case "expires":
         cookie.expires = new Date(value);
         break;
-      case "Max-Age":
+      case "max-Age":
         cookie.maxAge = Number(value);
         break;
-      case "Domain":
+      case "domain":
         cookie.domain = value;
         break;
-      case "Path":
+      case "path":
         cookie.path = value;
         break;
-      case "Secure":
+      case "secure":
         cookie.secure = true;
         break;
-      case "HttpOnly":
+      case "httpOnly":
         cookie.httpOnly = true;
         break;
-      case "SameSite":
+      case "samesite":
         cookie.sameSite = value as Cookie["sameSite"];
         break;
       default:
@@ -45,14 +56,8 @@ function getSetCookie(value: string): Cookie {
   return cookie;
 }
 
-function getSetCookieValues(headers: Headers): string[] {
-  return [...headers.entries()]
-    .filter(([key]) => key === "set-cookie")
-    .map(([_, value]) => value);
-}
-
-/** Returns cookie objects from `Set-Cookie` headers. */
 export function getSetCookies(headers: Headers): Cookie[] {
   return getSetCookieValues(headers)
-    .map(getSetCookie) ?? [];
+    .map(decomposeSetCookie)
+    .map(parseSetCookie) ?? [];
 }
