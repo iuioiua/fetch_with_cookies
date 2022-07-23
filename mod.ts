@@ -23,7 +23,7 @@ export function parseSetCookie(attrs: string[][]): Cookie {
     name: attrs[0][0],
     value: attrs[1][1],
   };
-  for (const [key, value] of attrs) {
+  for (const [key, value] of attrs.slice(1)) {
     switch (key.toLocaleLowerCase()) {
       case "expires":
         cookie.expires = new Date(value);

@@ -1,6 +1,6 @@
 import { assertEquals } from "./deps.ts";
 
-import { getSetCookieValues, serializeSetCookie } from "./mod.ts";
+import { decomposeSetCookie, getSetCookieValues } from "./mod.ts";
 
 Deno.test({
   name: "getSetCookieValues",
@@ -14,11 +14,11 @@ Deno.test({
 });
 
 Deno.test({
-  name: "serializeSetCookie",
+  name: "decomposeSetCookie",
   fn() {
     const value =
       "sessionId=38afes7a8; Expires=Fri, 07 Jan 1983 15:32:00 GMT; Max-Age=2592000; Domain=example.com; Path=/docs; Secure; HttpOnly; SameSite=Strict; Lulu=meowmeow";
-    assertEquals(serializeSetCookie(value), [
+    assertEquals(decomposeSetCookie(value), [
       ["sessionId", "38afes7a8"],
       ["Expires", "Fri, 07 Jan 1983 15:32:00 GMT"],
       ["Max-Age", "2592000"],
